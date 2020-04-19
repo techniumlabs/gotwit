@@ -54,6 +54,6 @@ func (a *AppUI) GetTimelineView() *tview.TextView {
 }
 
 func DisplayTweet(w io.Writer, t *twitter.Tweet) {
-	fmt.Fprintf(w, "[red]%s[white]\n", t.User.Name)
+	fmt.Fprintf(w, "[green]%s[white] @%s [red]❤️[white] %d  RT%d\n", t.User.Name, t.User.ScreenName, t.FavoriteCount, t.RetweetCount)
 	fmt.Fprintf(w, "%s\n\n", t.Text)
 }
