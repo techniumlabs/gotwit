@@ -31,17 +31,51 @@ func NewApp(cfgFile string) (*App, error) {
 	return &App{Config: c, Client: client}, nil
 }
 
+func (a *App) HomeTimeline(c chan *twitter.Tweet, command string) {
+	go func() {
+
+		var tweets []twitter.Tweet
+		var err error
+
+		switch command {
+		case "init":
+			tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+				Count: 20,
+			})
+		case "scroll":
+			log.Printf("scrolling %d tweets")
+
+		}
+
+		tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+			Count: 10,
+		})
+		if err != nil {
+			log.Error(err.Error())
+		}
+		for _, tweet := range tweets {
+			c <- &tweet
+		}
+
+	}()
+
+	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	log.Println(<-ch)
+
+}
+
 func (a *App) UserTweets(c chan *twitter.Tweet) {
 
-	// params := &twitter.StreamUserParams{
-	//	With:          "followings",
-	//	StallWarnings: twitter.Bool(true),
-	// }
-	// stream, err := a.App.Client.Streams.User(params)
-	params := &twitter.StreamSampleParams{
+	params := &twitter.StreamUserParams{
 		StallWarnings: twitter.Bool(true),
 	}
-	stream, err := a.Client.Streams.Sample(params)
+	stream, err := a.Client.Streams.User(params)
+	// params := &twitter.StreamSampleParams{
+	//	StallWarnings: twitter.Bool(true),
+	// }
+	// stream, err := a.Client.Streams.Sample(params)
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return

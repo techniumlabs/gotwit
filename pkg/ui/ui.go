@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	log "github.com/sirupsen/logrus"
 	gotwitApp "github.com/techniumlabs/gotwit/pkg/app"
@@ -27,9 +28,21 @@ func NewUI(app *gotwitApp.App) *AppUI {
 func (a *AppUI) Render() {
 	// box := tview.NewBox().SetBorder(true).SetTitle("Hello, world!")
 
-	if err := a.UIApp.SetRoot(a.GetTimelineView(), true).Run(); err != nil {
+	if err := a.UIApp.SetRoot(a.GetHomeLayout(), true).Run(); err != nil {
 		panic(err)
 	}
+}
+
+func (a *AppUI) GetHomeLayout() *tview.Flex {
+	frame := tview.NewFrame(a.GetTimelineView()).
+		SetBorders(2, 2, 2, 2, 4, 4).
+		AddText("Home", true, tview.AlignLeft, tcell.ColorRed)
+
+	flex := tview.NewFlex().
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(frame, 0, 1, true), 0, 1, false)
+
+	return flex
 }
 
 func (a *AppUI) GetTimelineView() *tview.TextView {
@@ -43,13 +56,12 @@ func (a *AppUI) GetTimelineView() *tview.TextView {
 
 	go func() {
 		c := make(chan *twitter.Tweet)
-		go a.App.UserTweets(c)
+		go a.App.HomeTimeline(c, "init")
 		for t := range c {
 			DisplayTweet(textView, t)
 		}
 	}()
 
-	textView.SetBorder(true)
 	return textView
 }
 
