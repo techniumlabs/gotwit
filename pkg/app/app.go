@@ -1,6 +1,7 @@
 package app
 
 import (
+	"math"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,7 +38,7 @@ func (a *App) HomeTimeline(output chan *twitter.Tweet, command chan string) {
 		var tweets []twitter.Tweet
 		var err error
 		var maxTweet int64
-		var minTweet int64
+		var minTweet int64 = math.MaxInt64
 
 		for {
 			switch <-command {
