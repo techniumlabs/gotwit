@@ -39,16 +39,17 @@ func (a *App) HomeTimeline(c chan *twitter.Tweet, command string) {
 
 		switch command {
 		case "init":
-			tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-				Count: 20,
-			})
+			log.Println("Init")
+			// tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+			//	Count: 20,
+			// })
 		case "scroll":
 			log.Printf("scrolling %d tweets")
 
 		}
 
 		tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-			Count: 10,
+			Count: 100,
 		})
 		if err != nil {
 			log.Error(err.Error())
