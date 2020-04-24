@@ -31,31 +31,50 @@ func NewApp(cfgFile string) (*App, error) {
 	return &App{Config: c, Client: client}, nil
 }
 
-func (a *App) HomeTimeline(c chan *twitter.Tweet, command string) {
+func (a *App) HomeTimeline(output chan *twitter.Tweet, command chan string) {
 	go func() {
 
 		var tweets []twitter.Tweet
 		var err error
+		var maxTweet int64
+		var minTweet int64
 
-		switch command {
-		case "init":
-			log.Println("Init")
-			// tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-			//	Count: 20,
-			// })
-		case "scroll":
-			log.Printf("scrolling %d tweets")
+		for {
+			switch <-command {
+			case "init":
+				tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+					Count: 100,
+				})
+				if err != nil {
+					log.Error(err.Error())
+				}
+			case "refresh":
+				tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+					Count: 100,
+				})
+				if err != nil {
+					log.Error(err.Error())
+				}
+			case "next":
+				tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
+					MaxID: minTweet,
+					Count: 100,
+				})
+				if err != nil {
+					log.Error(err.Error())
+				}
+			}
 
-		}
+			for _, tweet := range tweets {
+				if maxTweet < tweet.ID {
+					maxTweet = tweet.ID
+				}
 
-		tweets, _, err = a.Client.Timelines.HomeTimeline(&twitter.HomeTimelineParams{
-			Count: 100,
-		})
-		if err != nil {
-			log.Error(err.Error())
-		}
-		for _, tweet := range tweets {
-			c <- &tweet
+				if minTweet > tweet.ID {
+					minTweet = tweet.ID
+				}
+				output <- &tweet
+			}
 		}
 
 	}()

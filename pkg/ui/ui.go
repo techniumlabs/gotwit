@@ -60,9 +60,11 @@ func (a *AppUI) GetTimelineView() *tview.TextView {
 			a.UIApp.Draw()
 		})
 
+	c := make(chan *twitter.Tweet)
+	cin := make(chan string)
 	go func() {
-		c := make(chan *twitter.Tweet)
-		go a.App.HomeTimeline(c, "init")
+		go a.App.HomeTimeline(c, cin)
+		cin <- "init"
 		for t := range c {
 			fmt.Fprintf(textView, `["%d"]`, totalTweets)
 			DisplayTweet(textView, t)
@@ -82,6 +84,8 @@ func (a *AppUI) GetTimelineView() *tview.TextView {
 					next, _ := strconv.Atoi(currentSelection[0])
 					if next < totalTweets-1 {
 						next += 1
+					} else {
+						cin <- "next"
 					}
 					textView.Highlight(strconv.Itoa(next)).ScrollToHighlight()
 				} else {
@@ -93,6 +97,8 @@ func (a *AppUI) GetTimelineView() *tview.TextView {
 					next, _ := strconv.Atoi(currentSelection[0])
 					if next > 0 {
 						next -= 1
+					} else {
+						cin <- "refresh"
 					}
 					textView.Highlight(strconv.Itoa(next)).ScrollToHighlight()
 				} else {
